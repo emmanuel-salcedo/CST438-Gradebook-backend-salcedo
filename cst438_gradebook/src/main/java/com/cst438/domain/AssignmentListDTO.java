@@ -13,11 +13,10 @@ public class AssignmentListDTO {
 		public String dueDate;
 		public String courseTitle;
 		public int courseId;
-		
-		
+
 		public AssignmentDTO() {
-	        // Default constructor
-	    }
+			// Default constructor
+		}
 
 		public AssignmentDTO(int assignmentId, int courseId, String assignmentName, String dueDate,
 				String courseTitle) {
@@ -30,10 +29,9 @@ public class AssignmentListDTO {
 
 		@Override
 		public String toString() {
-			return "[assignmentId=" + assignmentId + ", assignmentName=" + assignmentName + ", dueDate="
-					+ dueDate + ", courseTitle=" + courseTitle + ", courseId=" + courseId + "]";
+			return "[assignmentId=" + assignmentId + ", assignmentName=" + assignmentName + ", dueDate=" + dueDate
+					+ ", courseTitle=" + courseTitle + ", courseId=" + courseId + "]";
 		}
-
 
 		@Override
 		public boolean equals(Object obj) {
@@ -65,16 +63,14 @@ public class AssignmentListDTO {
 				return false;
 			return true;
 		}
-		
-		
-		
+
 	}
 
 	public ArrayList<AssignmentDTO> assignments = new ArrayList<>();
 
 	@Override
 	public String toString() {
-		return "AssignmentListDTO " + assignments ;
+		return "AssignmentListDTO " + assignments;
 	}
 
 	@Override
@@ -93,5 +89,5 @@ public class AssignmentListDTO {
 			return false;
 		return true;
 	}
-	
+
 }

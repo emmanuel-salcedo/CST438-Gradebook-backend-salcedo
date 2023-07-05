@@ -132,10 +132,10 @@ public class GradeBookController {
 
 	@PostMapping("/assignment")
 	public AssignmentListDTO addAssignment(@RequestBody AssignmentListDTO.AssignmentDTO assignmentDTO) {
-		
+
 		// Get the course using assignmentDTO.courseId
 		Course course = courseRepository.findById(assignmentDTO.courseId).orElse(null);
-		
+
 		if (course == null) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid course ID.");
 		}

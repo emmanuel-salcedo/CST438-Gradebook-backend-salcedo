@@ -12,43 +12,42 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.handler.annotation.support.DefaultMessageHandlerMethodFactory;
 
-
 @Configuration
 @ConditionalOnProperty(prefix = "registration", name = "service", havingValue = "MQ")
-public class RegistrationMQConfig   implements RabbitListenerConfigurer {
-	
+public class RegistrationMQConfig implements RabbitListenerConfigurer {
+
 	@Bean
 	public Queue gradebookQueue() {
 		return new Queue("gradebook-queue", true);
 	}
-	
+
 	@Bean
 	public Queue registrationQueue() {
 		return new Queue("registration-queue", true);
 	}
-	
-	// converter rabbit template to convert objects to JSON 
+
+	// converter rabbit template to convert objects to JSON
 	@Bean
-	public RabbitTemplate rabbitTemplate( ConnectionFactory connectionFactory) {
+	public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
 		RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
-		rabbitTemplate.setMessageConverter( new Jackson2JsonMessageConverter() );
+		rabbitTemplate.setMessageConverter(new Jackson2JsonMessageConverter());
 		return rabbitTemplate;
 	}
-	
-	@Bean 
+
+	@Bean
 	public MappingJackson2MessageConverter consumerJackson2MessageConverter() {
 		return new MappingJackson2MessageConverter();
 	}
-	
+
 	@Bean
 	public DefaultMessageHandlerMethodFactory messageHandlerMethodFactory() {
 		DefaultMessageHandlerMethodFactory factory = new DefaultMessageHandlerMethodFactory();
 		factory.setMessageConverter(consumerJackson2MessageConverter());
 		return factory;
 	}
-	
+
 	@Override
-	public void configureRabbitListeners( RabbitListenerEndpointRegistrar registrar ) {
+	public void configureRabbitListeners(RabbitListenerEndpointRegistrar registrar) {
 		registrar.setMessageHandlerMethodFactory(messageHandlerMethodFactory());
 	}
 

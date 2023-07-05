@@ -10,21 +10,22 @@ import javax.persistence.ManyToOne;
 @Entity
 public class AssignmentGrade {
 	@Id
-	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
-	
+
 	@ManyToOne
-	@JoinColumn(name="enrollment_id")
+	@JoinColumn(name = "enrollment_id")
 	private Enrollment studentEnrollment;
-	
+
 	@ManyToOne
-	@JoinColumn(name="assignment_id")
+	@JoinColumn(name = "assignment_id")
 	private Assignment assignment;
-	
+
 	private String score;
-	
-	public AssignmentGrade() { }
-	
+
+	public AssignmentGrade() {
+	}
+
 	public AssignmentGrade(Assignment assignment, Enrollment enrollment) {
 		this.assignment = assignment;
 		this.studentEnrollment = enrollment;
@@ -69,7 +70,7 @@ public class AssignmentGrade {
 				+ ", score=" + score + "]";
 	}
 
-    // equality is based on id and score attributes only!
+	// equality is based on id and score attributes only!
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -88,7 +89,5 @@ public class AssignmentGrade {
 			return false;
 		return true;
 	}
-	
-	
 
 }

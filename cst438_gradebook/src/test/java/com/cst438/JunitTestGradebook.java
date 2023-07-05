@@ -17,6 +17,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import java.util.ArrayList;
 import java.util.Optional;
 
 import com.cst438.controllers.GradeBookController;
@@ -51,7 +52,7 @@ import org.springframework.test.context.ContextConfiguration;
 @WebMvcTest
 public class JunitTestGradebook {
 
-	static final String URL = "http://localhost:8080";
+	static final String URL = "http://localhost:8081";
 	public static final int TEST_COURSE_ID = 40442;
 	public static final String TEST_STUDENT_EMAIL = "test@csumb.edu";
 	public static final String TEST_STUDENT_NAME = "test";
@@ -260,4 +261,89 @@ public class JunitTestGradebook {
 		}
 	}
 
+	@Test
+	public void addNewAssignment() throws Exception {
+		// Mock database data
+		Course course = new Course();
+		course.setCourse_id(1);
+		course.setInstructor("test_instructor");
+		courseRepository.save(course);
+
+		// Mock HTTP POST request to add a new assignment
+		MockHttpServletResponse response = mvc
+				.perform(MockMvcRequestBuilders.post("/assignment").contentType(MediaType.APPLICATION_JSON)
+						.content("{\"name\": \"Assignment 1\", \"dueDate\": \"2023-07-05\", \"courseId\": 1}")
+						.accept(MediaType.APPLICATION_JSON))
+				.andReturn().getResponse();
+
+		// Verify the HTTP response status code
+		assertEquals(200, response.getStatus());
+
+		// Verify that the assignment was saved
+		verify(assignmentRepository, times(1)).save(any(Assignment.class));
+	}
+
+	@Test
+	public void changeAssignmentName() throws Exception {
+		// Mock database data
+		Assignment assignment = new Assignment();
+		assignment.setId(1);
+		assignment.setName("Assignment 1");
+		assignmentRepository.save(assignment);
+
+		// Mock HTTP PUT request to change the assignment name
+		MockHttpServletResponse response = mvc
+				.perform(MockMvcRequestBuilders.put("/assignment/1").contentType(MediaType.APPLICATION_JSON)
+						.content("{\"assignmentName\": \"New Assignment Name\"}").accept(MediaType.APPLICATION_JSON))
+				.andReturn().getResponse();
+
+		// Verify the HTTP response status code
+		assertEquals(200, response.getStatus());
+
+		// Verify that the assignment was updated
+		verify(assignmentRepository, times(1)).save(any(Assignment.class));
+	}
+
+	@Test
+	public void deleteAssignmentWithNoGrades() throws Exception {
+		// Mock database data
+		Assignment assignment = new Assignment();
+		assignment.setId(1);
+		assignmentRepository.save(assignment);
+
+		// Mock HTTP DELETE request to delete the assignment
+		MockHttpServletResponse response = mvc
+				.perform(MockMvcRequestBuilders.delete("/assignment/1").accept(MediaType.APPLICATION_JSON)).andReturn()
+				.getResponse();
+
+		// Verify the HTTP response status code
+		assertEquals(200, response.getStatus());
+
+		// Verify that the assignment was deleted
+		verify(assignmentRepository, times(1)).deleteById(1);
+	}
+
+	@Test
+	public void deleteAssignmentWithGrades() throws Exception {
+		// Mock database data
+		Assignment assignment = new Assignment();
+		assignment.setId(1);
+		assignmentRepository.save(assignment);
+
+		// Mock the presence of grades associated with the assignment
+		given(assignmentGradeRepository.findByAssignmentId(1)).willReturn(new ArrayList<>());
+
+		// Mock HTTP DELETE request to delete the assignment
+		MockHttpServletResponse response = mvc
+				.perform(MockMvcRequestBuilders.delete("/assignment/1").accept(MediaType.APPLICATION_JSON)).andReturn()
+				.getResponse();
+
+		// Verify the HTTP response status code
+		assertEquals(400, response.getStatus());
+
+		// Verify that the assignment was not deleted
+		verify(assignmentRepository, times(0)).deleteById(1);
+	}
+
+	// Utility methods for JSON conversion (asJsonString and fromJsonString)
 }

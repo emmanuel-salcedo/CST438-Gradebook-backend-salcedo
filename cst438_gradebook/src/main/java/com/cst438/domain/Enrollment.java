@@ -10,22 +10,21 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
-
 @Entity
 public class Enrollment {
-	
+
 	@Id
-	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
-	
+
 	private String studentName;
 	private String studentEmail;
-	
+
 	@ManyToOne
-	@JoinColumn(name="course_id")
+	@JoinColumn(name = "course_id")
 	private Course course;
-	
-	@OneToMany(mappedBy="studentEnrollment")
+
+	@OneToMany(mappedBy = "studentEnrollment")
 	List<AssignmentGrade> assignmentGrades;
 
 	public int getId() {
@@ -59,7 +58,6 @@ public class Enrollment {
 	public void setCourse(Course course) {
 		this.course = course;
 	}
-	
 
 	public List<AssignmentGrade> getAssignmentGrades() {
 		return assignmentGrades;
@@ -75,6 +73,4 @@ public class Enrollment {
 				+ course + "]";
 	}
 
-	
-	
 }

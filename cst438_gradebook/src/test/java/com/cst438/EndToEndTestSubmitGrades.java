@@ -15,7 +15,6 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-
 import com.cst438.domain.Assignment;
 import com.cst438.domain.AssignmentGrade;
 import com.cst438.domain.AssignmentGradeRepository;
@@ -102,9 +101,9 @@ public class EndToEndTestSubmitGrades {
 		// FireFox 	webdriver.firefox.driver 	FirefoxDriver
 		// IE 		webdriver.ie.driver 		InternetExplorerDriver
 		//@formatter:on
-		
+
 		/*
-		 * initialize the WebDriver and get the home page. 
+		 * initialize the WebDriver and get the home page.
 		 */
 
 		System.setProperty("webdriver.chrome.driver", CHROME_DRIVER_FILE_LOCATION);
@@ -114,64 +113,64 @@ public class EndToEndTestSubmitGrades {
 
 		driver.get(URL);
 		Thread.sleep(SLEEP_DURATION);
-		
 
 		try {
 			/*
-			* locate input element for test assignment by assignment name
-			* 
-			* To select a radio button in a Datagrid display
-			* 1.  find the elements in the assignmentName column of the data grid table.
-			* 2.  locate the element with test assignment name and click the input tag.
-			*/
-			
-			List<WebElement> elements  = driver.findElements(By.xpath("//div[@data-field='assignmentName']/div"));
+			 * locate input element for test assignment by assignment name
+			 * 
+			 * To select a radio button in a Datagrid display 1. find the elements in the
+			 * assignmentName column of the data grid table. 2. locate the element with test
+			 * assignment name and click the input tag.
+			 */
+
+			List<WebElement> elements = driver.findElements(By.xpath("//div[@data-field='assignmentName']/div"));
 			boolean found = false;
 			for (WebElement we : elements) {
 				System.out.println(we.getText()); // for debug
 				if (we.getText().equals(TEST_ASSIGNMENT_NAME)) {
-					found=true;
+					found = true;
 					we.findElement(By.xpath("descendant::input")).click();
 					break;
 				}
 			}
-			assertTrue( found, "Unable to locate TEST ASSIGNMENT in list of assignments to be graded.");
+			assertTrue(found, "Unable to locate TEST ASSIGNMENT in list of assignments to be graded.");
 
 			/*
-			 *  Locate and click Grade button to indicate to grade this assignment.
+			 * Locate and click Grade button to indicate to grade this assignment.
 			 */
-			
+
 			driver.findElement(By.xpath("//a")).click();
 			Thread.sleep(SLEEP_DURATION);
 
 			/*
-			 *  Locate row for student name "Test" and enter score of "99.9" into the grade field
-			 *  there should only be one row in the data grid table.
-			 *  find the student name, then go to the grade column and enter 99.9
+			 * Locate row for student name "Test" and enter score of "99.9" into the grade
+			 * field there should only be one row in the data grid table. find the student
+			 * name, then go to the grade column and enter 99.9
 			 */
-			
-			elements  = driver.findElements(By.xpath("//div[@data-field='name' and @role='cell']"));
+
+			elements = driver.findElements(By.xpath("//div[@data-field='name' and @role='cell']"));
 			for (WebElement element : elements) {
 				System.out.println(element.getText());
 				if (element.getText().equals(TEST_STUDENT_NAME)) {
-					element.findElement(By.xpath("following-sibling::div[@data-field='grade']")).sendKeys("99.9"+Keys.ENTER);
+					element.findElement(By.xpath("following-sibling::div[@data-field='grade']"))
+							.sendKeys("99.9" + Keys.ENTER);
 					Thread.sleep(SLEEP_DURATION);
 					break;
 				}
 			}
-			
+
 			/*
-			 *  Locate submit button and click
+			 * Locate submit button and click
 			 */
 			driver.findElement(By.xpath("//button[@id='Submit']")).click();
 			Thread.sleep(SLEEP_DURATION);
 
 			/*
-			 *  verify that score show up in updated data grid table
+			 * verify that score show up in updated data grid table
 			 */
-			
-			 WebElement w = driver.findElement(By.xpath("//div[@data-field='name' and @role='cell']"));
-			 w =  w.findElement(By.xpath("following-sibling::div[@data-field='grade']"));
+
+			WebElement w = driver.findElement(By.xpath("//div[@data-field='name' and @role='cell']"));
+			w = w.findElement(By.xpath("following-sibling::div[@data-field='grade']"));
 			assertEquals("99.9", w.getText(), "score does not show value entered as 99.9");
 
 			// verify that assignment_grade has been added to database with score of 99.9
@@ -183,10 +182,11 @@ public class EndToEndTestSubmitGrades {
 		} finally {
 
 			/*
-			 *  clean up database so the test is repeatable.
+			 * clean up database so the test is repeatable.
 			 */
 			ag = assignnmentGradeRepository.findByAssignmentIdAndStudentEmail(a.getId(), TEST_USER_EMAIL);
-			if (ag!=null) assignnmentGradeRepository.delete(ag);
+			if (ag != null)
+				assignnmentGradeRepository.delete(ag);
 			enrollmentRepository.delete(e);
 			assignmentRepository.delete(a);
 			courseRepository.delete(c);

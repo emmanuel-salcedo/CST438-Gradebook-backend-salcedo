@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -42,7 +43,6 @@ public class GradeBookController {
 	@Autowired
 	AssignmentGradeRepository assignmentGradeRepository;
 
-	@Autowired
 	CourseRepository courseRepository;
 
 	@Autowired
@@ -130,109 +130,58 @@ public class GradeBookController {
 		registrationService.sendFinalGrades(course_id, cdto);
 	}
 
-	@PostMapping("/assignment")
-	public AssignmentListDTO addAssignment(@RequestBody AssignmentListDTO.AssignmentDTO assignmentDTO) {
-
-		// Get the course using assignmentDTO.courseId
-		Course course = courseRepository.findById(assignmentDTO.courseId).orElse(null);
-
-		if (course == null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid course ID.");
+	@PostMapping("/course/{course_id}/addAssignment")
+	@Transactional
+	public void addAssignment(@PathVariable int course_id, @RequestParam String assignment_name,
+			@RequestParam String due_date) {
+		// check that this request is from the course instructor and for a valid course
+		String email = "dwisneski@csumb.edu"; // user name (should be instructor's email)
+		Course c = courseRepository.findById(course_id).orElse(null);
+		if (c == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Course does not exist. ");
+		}
+		if (!c.getInstructor().equals(email)) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not Authorized. ");
 		}
 
-		// Parse the due date string into a Date object
-		Date dueDate = null;
-		try {
-			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-			java.util.Date utilDate = dateFormat.parse(assignmentDTO.dueDate);
-			dueDate = new java.sql.Date(utilDate.getTime());
-		} catch (ParseException e) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid due date format.");
-		}
-
-		// Create a new Assignment object
 		Assignment assignment = new Assignment();
-		assignment.setName(assignmentDTO.assignmentName);
-		assignment.setDueDate(dueDate);
-		assignment.setCourse(course);
+		assignment.setCourse(c);
+		assignment.setName(assignment_name);
+		assignment.setNeedsGrading(1);
+		assignment.setDueDate(Date.valueOf(due_date));
 
-		// Save the assignment to the repository
-		assignment = assignmentRepository.save(assignment);
-
-		// Prepare the assignment DTO
-		AssignmentListDTO.AssignmentDTO assignmentDto = new AssignmentListDTO.AssignmentDTO(assignment.getId(),
-				assignment.getCourse().getCourse_id(), assignment.getName(), assignment.getDueDate().toString(),
-				assignment.getCourse().getTitle());
-
-		// Add the assignment DTO to the list
-		AssignmentListDTO result = new AssignmentListDTO();
-		result.assignments.add(assignmentDto);
-
-		return result;
+		assignmentRepository.save(assignment);
 	}
 
-	@PutMapping("/assignment/{id}")
-	public AssignmentListDTO updateAssignment(@RequestBody AssignmentDTO assignmentDTO,
-			@PathVariable("id") Integer assignmentId) {
+	@PutMapping("/assignment/{id}/updateName")
+	@Transactional
+	public void updateAssignmentName(@PathVariable int id, @RequestParam String assignment_name) {
+		String email = "dwisneski@csumb.edu"; // user name (should be instructor's email)
+		checkAssignment(id, email); // check that user name matches instructor email of the course.
 
-		// Get the assignment to update
-		Assignment assignment = assignmentRepository.findById(assignmentId).orElse(null);
-		if (assignment == null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Assignment not found.");
-		}
+		Assignment assignment = assignmentRepository.findById(id).orElse(null);
 
-		// Get the course using assignmentDTO.courseId
-		Course course = courseRepository.findById(assignmentDTO.courseId).orElse(null);
-		if (course == null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid course ID.");
-		}
+		assignment.setName(assignment_name);
 
-		// Parse the due date string into a Date object
-		Date dueDate = null;
-		try {
-			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-			java.util.Date utilDate = dateFormat.parse(assignmentDTO.dueDate);
-			dueDate = new java.sql.Date(utilDate.getTime());
-		} catch (ParseException e) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid due date format.");
-		}
-
-		// Update Assignment object
-		assignment.setName(assignmentDTO.assignmentName);
-		assignment.setDueDate(dueDate);
-		assignment.setCourse(course);
-
-		// Save the updated assignment to the repository
-		assignment = assignmentRepository.save(assignment);
-
-		// Prepare the assignment DTO
-		AssignmentListDTO.AssignmentDTO assignmentDto = new AssignmentListDTO.AssignmentDTO(assignment.getId(),
-				assignment.getCourse().getCourse_id(), assignment.getName(), assignment.getDueDate().toString(),
-				assignment.getCourse().getTitle());
-
-		// Add the assignment DTO to the list
-		AssignmentListDTO result = new AssignmentListDTO();
-		result.assignments.add(assignmentDto);
-
-		return result;
+		assignmentRepository.save(assignment);
 	}
 
-	@DeleteMapping("/assignment/{id}")
-	public void deleteAssignment(@PathVariable("id") Integer assignmentId) {
-		// Get the assignment to delete
-		Assignment assignment = assignmentRepository.findById(assignmentId).orElse(null);
-		if (assignment == null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Assignment not found.");
+	@DeleteMapping("/assignment/{id}/delete")
+	@Transactional
+	public void deleteAssignment(@PathVariable int id) {
+		String email = "dwisneski@csumb.edu"; // user name (should be instructor's email)
+		checkAssignment(id, email); // check that user name matches instructor email of the course.
+
+		List<AssignmentGrade> ag = assignmentGradeRepository.findByAssignmentId(id);
+		System.out.print("list " + ag + " end list\n");
+
+		if (ag.size() != 0) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot Delete - grades exist " + id);
+		} else {
+			Assignment assignmentToDelete = assignmentRepository.findById(id).orElse(null);
+			assignmentRepository.delete(assignmentToDelete);
 		}
 
-		// Check if there are any grades associated with the assignment
-		List<AssignmentGrade> grades = assignmentGradeRepository.findByAssignmentId(assignmentId);
-		if (!grades.isEmpty()) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot delete assignment with grades.");
-		}
-
-		// Delete the assignment
-		assignmentRepository.delete(assignment);
 	}
 
 	private String letterGrade(double grade) {
@@ -269,7 +218,6 @@ public class GradeBookController {
 
 			assignmentGradeRepository.save(ag);
 		}
-
 	}
 
 	private Assignment checkAssignment(int assignmentId, String email) {

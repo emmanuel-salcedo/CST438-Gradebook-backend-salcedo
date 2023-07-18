@@ -31,7 +31,33 @@ public class EnrollmentController {
 	@Transactional
 	public EnrollmentDTO addEnrollment(@RequestBody EnrollmentDTO enrollmentDTO) {
 
-		// TODO complete this method in homework 4
+		// check that this request is from the course instructor and for a valid course
+		String email = "dwisneski@csumb.edu"; // user name (should be instructor's email)
+
+		// Grab variables from enrollmentDTO
+		int id = enrollmentDTO.id;
+		String studentEmail = enrollmentDTO.studentEmail;
+		String studentName = enrollmentDTO.studentEmail;
+		int course_id = enrollmentDTO.course_id;
+
+		// verify that course id and professor are valid
+		Course course = courseRepository.findById(course_id).orElse(null);
+		if (course == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Course does not exist. ");
+		}
+		if (!course.getInstructor().equals(email)) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not Authorized. ");
+		}
+
+		// Create new enrollment based on enrollmentDTO
+		Enrollment newEnrollment = new Enrollment();
+		newEnrollment.setCourse(course);
+		newEnrollment.setId(id);
+		newEnrollment.setStudentEmail(studentEmail);
+		newEnrollment.setStudentName(studentName);
+
+		// Save enrollment to database
+		enrollmentRepository.save(newEnrollment);
 
 		return null;
 
